@@ -2,7 +2,7 @@
 
 ./clean.sh
 
-rustc lib/protobuf.rs
+rustc -O --rlib lib/protobuf.rs
 rustc -L lib ./protobuf-bin-gen-rust.rs
 rustc -L lib ./protoc-gen-rust.rs
 
