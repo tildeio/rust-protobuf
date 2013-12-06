@@ -124,30 +124,21 @@ impl<'self> CodedInputStream<'self> {
         if self.pos() == self.current_limit {
             return false;
         }
-        if self.reader.is_none() {
-            false
-        } else {
-            match self.reader {
-                Some(ref mut reader) => {
-                    self.total_bytes_retired += self.buffer_size;
-                    self.buffer_pos = 0;
-                    let mut_reader: &mut Reader = *reader;
-                    self.buffer_size = io_error::cond.trap(|e| {
-                        if e.kind != EndOfFile {
-                            io_error::cond.raise(e);
-                        };
-                    }).inside(|| {
-                        mut_reader.read(self.buffer).unwrap_or(0) as u32
-                    });
-                    if self.buffer_size == 0 {
-                        return false;
-                    }
-                },
-                None => fail!(),
-            }
-            self.recompute_buffer_size_after_limit();
-            true
+        match self.reader {
+            Some(ref mut reader) => {
+                self.total_bytes_retired += self.buffer_size;
+                self.buffer_pos = 0;
+                let mut_reader: &mut Reader = *reader;
+                self.buffer_size = mut_reader.read(self.buffer).unwrap_or(0) as u32;
+
+                if self.buffer_size == 0 {
+                    return false;
+                }
+            },
+            None => return false,
         }
+        self.recompute_buffer_size_after_limit();
+        true
     }
 
     fn refill_buffer_really(&mut self) {
